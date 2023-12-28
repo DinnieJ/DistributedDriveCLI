@@ -4,7 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -27,19 +26,8 @@ to quickly create a Cobra application.`,
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-var Configuration map[string]map[string]string
+var AppConfiguration h.Configuration
 
-func init() {
-	config, err := h.LoadConfig("./tests.conf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	Configuration = config
-	fmt.Println(Configuration)
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -48,6 +36,11 @@ func Execute() {
 }
 
 func init() {
+	AppConfiguration.SetFilePath("./test.conf")
+	err := AppConfiguration.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
