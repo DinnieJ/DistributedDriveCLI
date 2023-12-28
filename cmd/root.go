@@ -6,6 +6,7 @@ package cmd
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	h "app.ddcli.datnn/helpers"
 	"github.com/spf13/cobra"
@@ -13,18 +14,12 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "app.ddcli.datnn",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:   "ddc",
+	Short: "Distributed Google Drive Storage CLI",
+	Long:  `CLI for download and upload file and folder protected to distributed Google Drive Storage`,
 }
+
+const CONFIG_FILE_PATH = ".config/ddc/conf.ini"
 
 var AppConfiguration h.Configuration
 
@@ -36,11 +31,17 @@ func Execute() {
 }
 
 func init() {
-	AppConfiguration.SetFilePath("./test.conf")
-	err := AppConfiguration.LoadConfig()
-	if err != nil {
+	var homeDir, _ = os.UserHomeDir()
+
+	var conf = filepath.Join(homeDir, CONFIG_FILE_PATH)
+	AppConfiguration.SetFilePath(conf)
+	if err := AppConfiguration.Init(); err != nil {
 		log.Fatal(err)
 	}
+	if err := AppConfiguration.LoadConfig(); err != nil {
+		log.Fatal(err)
+	}
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.

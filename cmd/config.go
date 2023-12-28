@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	h "app.ddcli.datnn/helpers"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +19,8 @@ var configCmd = &cobra.Command{
 		var clientSecret = h.GetInput("Google Client Secret: ")
 		AppConfiguration.SetConfig("googleAppClient", "clientID", clientId)
 		AppConfiguration.SetConfig("googleAppClient", "clientSecret", clientSecret)
-		AppConfiguration.WriteToConfigFile()
-		color.Blue("Setup config successful")
+		AppConfiguration.SaveConfig()
+		h.LogResult.Println("Setup config successful")
 	},
 }
 
