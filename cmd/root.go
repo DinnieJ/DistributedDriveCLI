@@ -14,14 +14,16 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ddc",
+	Use:   "ddcli",
 	Short: "Distributed Google Drive Storage CLI",
 	Long:  `CLI for download and upload file and folder protected to distributed Google Drive Storage`,
 }
 
-const CONFIG_FILE_PATH = ".config/ddc/conf.ini"
+const CONFIG_FILE_PATH = ".config/ddc/ddcli.conf"
+const CREDENTIAL_FILE_PATH = ".config/ddc/credential.conf"
 
 var AppConfiguration h.Configuration
+var GoogleDriveCredential h.Configuration
 
 func Execute() {
 	err := rootCmd.Execute()
@@ -34,21 +36,10 @@ func init() {
 	var homeDir, _ = os.UserHomeDir()
 
 	var conf = filepath.Join(homeDir, CONFIG_FILE_PATH)
+	var credentialPath = filepath.Join(homeDir, CREDENTIAL_FILE_PATH)
 	AppConfiguration.SetFilePath(conf)
-	if err := AppConfiguration.Init(); err != nil {
+	GoogleDriveCredential.SetFilePath(credentialPath)
+	if err := h.LoadAllConfig(&AppConfiguration, &GoogleDriveCredential); err != nil {
 		log.Fatal(err)
 	}
-	if err := AppConfiguration.LoadConfig(); err != nil {
-		log.Fatal(err)
-	}
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.app.ddcli.datnn.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
