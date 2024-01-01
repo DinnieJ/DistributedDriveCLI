@@ -1,12 +1,14 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
+	"errors"
+	"net/http"
+	"strconv"
 
+	h "app.ddcli.datnn/helpers"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,17 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("addConfig called")
+		var defaultPort int
+		if serverConfig, err := AppConfiguration.GetConfig("callbackServer"); err == nil {
+			if port, err := serverConfig.Get("port"); err == nil {
+				var intPort, _ = strconv.Atoi(port)
+				defaultPort = intPort
+			}
+		}
+
+		if err := h.StartCallbackServer(defaultPort); err != nil && errors.Is(err, http.ErrServerClosed) {
+			h.LogResult.Println("Add application successfully")
+		}
 	},
 }
 

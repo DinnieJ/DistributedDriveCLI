@@ -12,6 +12,9 @@ import (
 	"github.com/fatih/color"
 )
 
+var ErrConfigNotFound = errors.New("Config not found")
+var ErrConfigValueNotFound = errors.New("Config key value not found")
+
 type Configuration struct {
 	ConfigFilePath string
 	Data           map[string]map[string]string
@@ -113,14 +116,14 @@ func (configuration *Configuration) SaveConfig() error {
 	return nil
 }
 
-func (c *Configuration) GetConfig(name string) *Config {
-	if c.Data[name] != nil {
-		return nil
+func (c *Configuration) GetConfig(name string) (*Config, error) {
+	if c.Data[name] == nil {
+		return nil, ErrConfigNotFound
 	}
 	return &Config{
 		ConfigName: name,
 		Data:       c.Data[name],
-	}
+	}, nil
 }
 
 func (c *Configuration) GetPrtString() string {
@@ -139,8 +142,11 @@ func (c *Configuration) GetPrtString() string {
 	return str
 }
 
-func (cnf *Config) Get(key string) string {
-	return cnf.Data[key]
+func (cnf *Config) Get(key string) (string, error) {
+	if cnf.Data[key] == "" {
+		return "", ErrConfigValueNotFound
+	}
+	return cnf.Data[key], nil
 }
 
 func LoadAllConfig(configs ...*Configuration) error {

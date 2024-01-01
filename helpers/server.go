@@ -1,11 +1,18 @@
 package helpers
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"log"
 	"net"
+	"net/http"
+	"sync"
 )
 
 const DEFAULT_PORT = 28899
+
+const SRV_KEY = "server"
 
 type Credential struct {
 }
@@ -13,8 +20,27 @@ type Credential struct {
 func StoreToken(cred *Credential) error {
 	return nil
 }
-func handleCallbackRequest(c net.Conn) (*Credential, error) {
-	return &Credential{}, nil
+func CallbackWrapper(resp http.ResponseWriter, request *http.Request) {
+
+	var ctx = request.Context()
+	var cancel = ctx.Value("cancel").(context.CancelFunc)
+	var server *http.Server = ctx.Value(SRV_KEY).(*http.Server)
+	select {
+	case <-ctx.Done():
+		{
+			if err := server.Shutdown(context.Background()); err != nil {
+				log.Fatal(err)
+			}
+			return
+		}
+	default:
+	}
+	var code = request.URL.Query().Get("code")
+	if code != "" {
+		fmt.Printf("Find code: %s", code)
+		io.WriteString(resp, "Fuck you\n")
+		cancel()
+	}
 }
 
 func StartCallbackServer(port int) error {
@@ -25,22 +51,31 @@ func StartCallbackServer(port int) error {
 		listenerPort = DEFAULT_PORT
 	}
 
-	var listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", listenerPort))
-	if err != nil {
-		return err
+	httpServerExitDone := &sync.WaitGroup{}
+
+	httpServerExitDone.Add(1)
+
+	var mux = http.NewServeMux()
+	mux.HandleFunc("/callback", CallbackWrapper)
+	var ctx, cancel = context.WithCancel(context.Background())
+	var addr = Spr("127.0.0.1:%d", listenerPort)
+	LogInfo.Printf("Start callback server at %s\n", addr)
+	var server = &http.Server{
+		Addr:    addr,
+		Handler: mux,
 	}
 
-	for {
-		if conn, err := listener.Accept(); err == nil {
-			var credential, err = handleCallbackRequest(conn)
-			if err != nil {
-				return err
-			}
-			StoreToken(credential)
-			break
-		} else {
-			return err
-		}
+	server.BaseContext = func(l net.Listener) context.Context {
+		ctx = context.WithValue(ctx, SRV_KEY, server)
+		ctx = context.WithValue(ctx, "cancel", cancel)
+		return ctx
 	}
+	go func() {
+		defer httpServerExitDone.Done()
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+	httpServerExitDone.Wait()
 	return nil
 }
