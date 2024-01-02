@@ -39,6 +39,7 @@ func init() {
 	var credentialPath = filepath.Join(homeDir, CREDENTIAL_FILE_PATH)
 	AppConfiguration.SetFilePath(conf)
 	GoogleDriveCredential.SetFilePath(credentialPath)
+	GoogleDriveCredential.Generated = true
 	if err := h.LoadAllConfig(&AppConfiguration, &GoogleDriveCredential); err != nil {
 		log.Fatal(err)
 	}
