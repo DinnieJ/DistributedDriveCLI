@@ -129,6 +129,20 @@ func (c *Configuration) GetConfig(name string) (*Config, error) {
 	}, nil
 }
 
+func (c *Configuration) GetOrError(configName, key string) (string, error) {
+	config, err := c.GetConfig(configName)
+	if err != nil {
+		return "", ErrConfigNotFound
+	}
+
+	value, err := config.Get(key)
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
+}
+
 func (c *Configuration) GetPrtString() string {
 	var titleSprint = color.New(color.FgYellow, color.Bold)
 	var keySprint = color.New(color.FgCyan)

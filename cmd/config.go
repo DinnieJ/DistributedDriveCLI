@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	R "app.ddcli.datnn/global"
 	h "app.ddcli.datnn/helpers"
 	"github.com/spf13/cobra"
 )
@@ -17,9 +18,9 @@ var configCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var clientId = h.GetInput("Google Client ID: ")
 		var clientSecret = h.GetInput("Google Client Secret: ")
-		AppConfiguration.SetConfig("googleAppClient", "clientID", clientId)
-		AppConfiguration.SetConfig("googleAppClient", "clientSecret", clientSecret)
-		AppConfiguration.SaveConfig()
+		R.AppConfiguration.SetConfig("googleAppClient", "clientID", clientId)
+		R.AppConfiguration.SetConfig("googleAppClient", "clientSecret", clientSecret)
+		R.AppConfiguration.SaveConfig()
 		h.LogResult.Println("Setup config successful")
 	},
 }
@@ -29,7 +30,7 @@ var configListCmd = &cobra.Command{
 	Short: "Show all config for application",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(AppConfiguration.GetPrtString())
+		fmt.Println(R.AppConfiguration.GetPrtString())
 	},
 }
 

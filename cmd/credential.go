@@ -4,40 +4,48 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"errors"
-	"net/http"
+	"fmt"
+	"log"
 	"strconv"
 
+	R "app.ddcli.datnn/global"
 	h "app.ddcli.datnn/helpers"
 	"github.com/spf13/cobra"
 )
 
 // addConfigCmd represents the addConfig command
 var addConfigCmd = &cobra.Command{
-	Use:   "addConfig",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "credential",
+	Short: "Credential group command",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		return
+	},
+}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+var addCredentialCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add new Google Drive credential",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var defaultPort int
-		if serverConfig, err := AppConfiguration.GetConfig("callbackServer"); err == nil {
+		if serverConfig, err := R.AppConfiguration.GetConfig("callbackServer"); err == nil {
 			if port, err := serverConfig.Get("port"); err == nil {
 				var intPort, _ = strconv.Atoi(port)
 				defaultPort = intPort
 			}
 		}
 
-		if err := h.StartCallbackServer(defaultPort); err != nil && errors.Is(err, http.ErrServerClosed) {
-			h.LogResult.Println("Add application successfully")
+		if cred, err := h.StartCredentialCallbackServer(defaultPort, &R.AppConfiguration); err != nil {
+			log.Fatal(err)
+		} else {
+			fmt.Println(cred)
 		}
 	},
 }
 
 func init() {
+	addConfigCmd.AddCommand(addCredentialCmd)
 	rootCmd.AddCommand(addConfigCmd)
 
 	// Here you will define your flags and configuration settings.
