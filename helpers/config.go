@@ -121,7 +121,7 @@ func (configuration *Configuration) SaveConfig() error {
 
 func (c *Configuration) GetConfig(name string) (*Config, error) {
 	if c.Data[name] == nil {
-		return nil, ErrConfigNotFound
+		return nil, fmt.Errorf("config [%s] not found", name)
 	}
 	return &Config{
 		ConfigName: name,
@@ -132,7 +132,7 @@ func (c *Configuration) GetConfig(name string) (*Config, error) {
 func (c *Configuration) GetOrError(configName, key string) (string, error) {
 	config, err := c.GetConfig(configName)
 	if err != nil {
-		return "", ErrConfigNotFound
+		return "", err
 	}
 
 	value, err := config.Get(key)
@@ -161,7 +161,7 @@ func (c *Configuration) GetPrtString() string {
 
 func (cnf *Config) Get(key string) (string, error) {
 	if cnf.Data[key] == "" {
-		return "", ErrConfigValueNotFound
+		return "", fmt.Errorf("value for \"%s\" not found in config [%s]", key, cnf.ConfigName)
 	}
 	return cnf.Data[key], nil
 }

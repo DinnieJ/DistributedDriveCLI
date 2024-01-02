@@ -4,12 +4,13 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"log"
+	"encoding/json"
+	"io"
+	"os"
 	"strconv"
 
-	R "app.ddcli.datnn/global"
 	h "app.ddcli.datnn/helpers"
+	R "app.ddcli.datnn/root"
 	"github.com/spf13/cobra"
 )
 
@@ -35,12 +36,18 @@ var addCredentialCmd = &cobra.Command{
 				defaultPort = intPort
 			}
 		}
-
-		if cred, err := h.StartCredentialCallbackServer(defaultPort, &R.AppConfiguration); err != nil {
-			log.Fatal(err)
-		} else {
-			fmt.Println(cred)
+		var credential = h.Must[*h.Credential](h.StartCredentialCallbackServer(defaultPort, &R.AppConfiguration))
+		var userInfo = h.HttpGetUserInfo(credential.AccessToken)
+		defer userInfo.Body.Close()
+		var userInfoResponse h.UserInfoResponse
+		if err := json.Unmarshal(h.Must[[]byte](io.ReadAll(userInfo.Body)), &userInfoResponse); err != nil {
+			h.LogErr.Printf("Failed to get userinfo %s\n", err.Error())
+			os.Exit(1)
 		}
+
+		R.GoogleDriveCredential.SetConfig(userInfoResponse.Id, "refreshToken", credential.RefreshToken)
+		R.GoogleDriveCredential.SaveConfig()
+		h.LogResult.Printf("Successfully add credential for user %s to application\n", userInfoResponse.Id)
 	},
 }
 

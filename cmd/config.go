@@ -6,8 +6,8 @@ package cmd
 import (
 	"fmt"
 
-	R "app.ddcli.datnn/global"
 	h "app.ddcli.datnn/helpers"
+	R "app.ddcli.datnn/root"
 	"github.com/spf13/cobra"
 )
 
