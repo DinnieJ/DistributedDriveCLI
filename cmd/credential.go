@@ -9,13 +9,13 @@ import (
 	"os"
 	"strconv"
 
-	h "app.ddcli.datnn/helpers"
+	h "app.ddcli.datnn/lib"
 	R "app.ddcli.datnn/root"
 	"github.com/spf13/cobra"
 )
 
 // addConfigCmd represents the addConfig command
-var addConfigCmd = &cobra.Command{
+var credentialCmd = &cobra.Command{
 	Use:   "credential",
 	Short: "Credential group command",
 	Long:  ``,
@@ -52,8 +52,8 @@ var addCredentialCmd = &cobra.Command{
 }
 
 func init() {
-	addConfigCmd.AddCommand(addCredentialCmd)
-	rootCmd.AddCommand(addConfigCmd)
+	credentialCmd.AddCommand(addCredentialCmd)
+	rootCmd.AddCommand(credentialCmd)
 
 	// Here you will define your flags and configuration settings.
 

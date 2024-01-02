@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	h "app.ddcli.datnn/helpers"
+	h "app.ddcli.datnn/lib"
 )
 
 const CONFIG_FILE_PATH = ".config/ddc/ddcli.conf"
