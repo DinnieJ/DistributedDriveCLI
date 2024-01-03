@@ -101,3 +101,19 @@ func HttpGetUserInfo(access_token string) *http.Response {
 
 	return response
 }
+
+func HttpRefreshAccessToken(clientId string, clientSecret string, refreshToken string) *http.Response {
+	var body = url.Values{}
+	body.Set("client_id", clientId)
+	body.Set("client_secret", clientSecret)
+	body.Set("refresh_token", refreshToken)
+	body.Set("grant_type", "refresh_token")
+	var request = Must[*http.Request](GetHttpRequest(&RequestStruct{
+		Url:     "https://oauth2.googleapis.com/token",
+		Method:  "POST",
+		Headers: map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
+		Body:    []byte(body.Encode()),
+	}))
+
+	return Must[*http.Response](client.Do(request))
+}

@@ -5,13 +5,16 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
 
 	h "app.ddcli.datnn/lib"
+	dl "app.ddcli.datnn/lib/drive"
 	R "app.ddcli.datnn/root"
 	"github.com/spf13/cobra"
+	"golang.org/x/oauth2"
 )
 
 // addConfigCmd represents the addConfig command
@@ -36,7 +39,7 @@ var addCredentialCmd = &cobra.Command{
 				defaultPort = intPort
 			}
 		}
-		var credential = h.Must[*h.Credential](h.StartCredentialCallbackServer(defaultPort, &R.AppConfiguration))
+		var credential = h.Must[*oauth2.Token](h.StartCredentialCallbackServer(defaultPort, &R.AppConfiguration))
 		var userInfo = h.HttpGetUserInfo(credential.AccessToken)
 		defer userInfo.Body.Close()
 		var userInfoResponse h.UserInfoResponse
@@ -45,13 +48,23 @@ var addCredentialCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		R.GoogleDriveCredential.SetConfig(userInfoResponse.Id, "refreshToken", credential.RefreshToken)
+		R.GoogleDriveCredential.SetConfig(h.Spr("google%s", userInfoResponse.Id), "refreshToken", credential.RefreshToken)
 		R.GoogleDriveCredential.SaveConfig()
 		h.LogResult.Printf("Successfully add credential for user %s to application\n", userInfoResponse.Id)
 	},
 }
 
+var listCredentialCmd = &cobra.Command{
+	Use:   "list",
+	Short: "Add new Google Drive credential",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Shit happend")
+		dl.GetAllDriveInfomation()
+	},
+}
+
 func init() {
+	credentialCmd.AddCommand(listCredentialCmd)
 	credentialCmd.AddCommand(addCredentialCmd)
 	rootCmd.AddCommand(credentialCmd)
 

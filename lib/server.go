@@ -13,6 +13,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	oauth2 "golang.org/x/oauth2"
 )
 
 const DEFAULT_PORT = 28899
@@ -43,26 +45,12 @@ func ResponseSuccess(w io.Writer) {
 	fmt.Fprintf(w, HTML_TEMPLATE, "Added New Drive to application successfully", "You can close this browser", nil)
 }
 
-type Credential struct {
-	mu           sync.Mutex
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
+type TokenMutex struct {
+	mu    sync.Mutex
+	Token *oauth2.Token
 }
 
-func (c *Credential) SetToken(token string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.AccessToken = token
-}
-
-func (c *Credential) GetToken() string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.AccessToken
-}
-
-func StartCredentialCallbackServer(port int, appConfig *Configuration) (*Credential, error) {
+func StartCredentialCallbackServer(port int, appConfig *Configuration) (*oauth2.Token, error) {
 	var listenerPort = DEFAULT_PORT
 	if port != 0 {
 		listenerPort = port
@@ -88,7 +76,7 @@ func StartCredentialCallbackServer(port int, appConfig *Configuration) (*Credent
 	mux.HandleFunc("/callback", CallbackWrapper)
 
 	var ctx, cancel = context.WithCancel(context.Background())
-	var result = &Credential{}
+	var result = &TokenMutex{}
 
 	var addr = Spr("127.0.0.1:%d", listenerPort)
 	LogInfo.Printf("Start callback server at %s\n", addr)
@@ -113,7 +101,7 @@ func StartCredentialCallbackServer(port int, appConfig *Configuration) (*Credent
 	if err := server.Shutdown(context.Background()); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return nil, err
 	}
-	return result, nil
+	return result.Token, nil
 }
 
 func CallbackWrapper(resp http.ResponseWriter, request *http.Request) {
@@ -121,7 +109,7 @@ func CallbackWrapper(resp http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 	var cancel = ctx.Value("cancel").(context.CancelFunc)
 	defer cancel()
-	var result = ctx.Value("result").(*Credential)
+	var result = ctx.Value("result").(*TokenMutex)
 	var appConfig = ctx.Value("appConfig").(*Configuration)
 	var oauthCodeChallenge = ctx.Value("oauthCodeChallenge").(*OAuthCodeChallenge)
 	if err := request.URL.Query().Get("error"); err != "" {
@@ -142,7 +130,7 @@ func CallbackWrapper(resp http.ResponseWriter, request *http.Request) {
 		var body = Must[[]byte](io.ReadAll(access_token_response.Body))
 		result.mu.Lock()
 		defer result.mu.Unlock()
-		if err := json.Unmarshal(body, &result); err != nil {
+		if err := json.Unmarshal(body, &result.Token); err != nil {
 			LogErr.Printf("Failed to get access token: %s\n", err.Error())
 			ResponseError(resp, "Failed to get access token", string(body))
 		} else {
