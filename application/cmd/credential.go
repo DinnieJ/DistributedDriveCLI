@@ -10,9 +10,8 @@ import (
 	"os"
 	"strconv"
 
-	h "app.ddcli.datnn/lib"
-	dl "app.ddcli.datnn/lib/drive"
-	R "app.ddcli.datnn/root"
+	R "app.ddcli.datnn/application"
+	h "app.ddcli.datnn/application/lib"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 )
@@ -59,7 +58,6 @@ var listCredentialCmd = &cobra.Command{
 	Short: "Add new Google Drive credential",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Shit happend")
-		dl.GetAllDriveInfomation()
 	},
 }
 

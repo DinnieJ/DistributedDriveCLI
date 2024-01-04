@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
-	h "app.ddcli.datnn/lib"
-	R "app.ddcli.datnn/root"
+	R "app.ddcli.datnn/application"
+	h "app.ddcli.datnn/application/lib"
 	"golang.org/x/oauth2"
 	d "google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
@@ -25,7 +25,7 @@ func (c *CustomTokenSource) Token() (*oauth2.Token, error) {
 	)
 	defer response.Body.Close()
 
-	var bbody = h.Must[[]byte](io.ReadAll(response.Body))
+	var bbody = h.Must(io.ReadAll(response.Body))
 	if err := json.Unmarshal(bbody, &token); err != nil {
 		h.LogErr.Printf("Failed to get access token: %s\n", err.Error())
 		return nil, err
