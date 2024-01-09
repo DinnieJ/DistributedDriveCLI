@@ -70,7 +70,7 @@ func (configuration *Configuration) LoadConfig() error {
 		configuration.Data = make(map[string]map[string]string)
 	}
 	var scanner = bufio.NewScanner(file)
-	var re = regexp.MustCompile(`^\[(?P<Name>[A-Za-z0-9_-]+)\]$`)
+	var re = regexp.MustCompile(`^\[(?P<Name>[A-Za-z0-9_-|]+)\]$`)
 	var reEnv = regexp.MustCompile(`^(?P<Key>[A-Za-z0-9_-]+)=(?P<Value>.*)$`)
 	var currentConfigName = ""
 	for scanner.Scan() {
