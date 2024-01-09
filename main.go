@@ -7,6 +7,7 @@ import (
 	"app.ddcli.datnn/application/cmd"
 )
 
+// main executes the main command of the program.
 func main() {
 	cmd.Execute()
 }

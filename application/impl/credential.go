@@ -34,9 +34,9 @@ func AddNewStorage() {
 		os.Exit(1)
 	}
 
-	R.GoogleDriveCredential.SetConfig(h.Spr("GoogleDrive|%s", userInfoResponse.Id), "refreshToken", credential.RefreshToken)
-	R.GoogleDriveCredential.SetConfig(h.Spr("GoogleDrive|%s", userInfoResponse.Id), "email", userInfoResponse.Email)
-	R.GoogleDriveCredential.SaveConfig()
+	R.StoreCredential.SetConfig(h.Spr("GoogleDrive|%s", userInfoResponse.Id), "refreshToken", credential.RefreshToken)
+	R.StoreCredential.SetConfig(h.Spr("GoogleDrive|%s", userInfoResponse.Id), "email", userInfoResponse.Email)
+	R.StoreCredential.SaveConfig()
 	h.LogResult.Printf("Successfully add credential for user %s to application\n", userInfoResponse.Id)
 }
 
@@ -62,19 +62,31 @@ type resultStorageInformation struct {
 	err  error
 }
 
+// getStorageBar generates a storage bar based on the given value and range.
+//
+// Parameters:
+// - value: a float64 representing the value of the storage.
+// - rng: a float64 representing the range of the storage.
+//
+// Return type: a string representing the storage bar.
 func getStorageBar(value float64, rng float64) string {
+	if rng == 0 || value > rng {
+		return ""
+	}
 	var storagePercent = value / rng
 	var barLength = 30
-	var usedBarLength = math.Ceil(storagePercent * float64(barLength))
+	var usedBarLength = math.RoundToEven(storagePercent * float64(barLength))
 	var bar = ""
-	bar += ""
 	bar += strings.Repeat("█", int(usedBarLength))
 	bar += strings.Repeat("░", barLength-int(usedBarLength))
-	bar += ""
-	bar += fmt.Sprintf(" %.2f %%", storagePercent*100)
+	bar += " "
+	bar += fmt.Sprintf("%.2f %%", storagePercent*100)
 	return bar
 }
 
+// byteToVerboseString converts a byte value into a human-readable string representation.
+//
+// It takes a float64 value representing the byte value and returns a string.
 func byteToVerboseString(value float64) string {
 	var unit = []string{
 		"KiB", "MiB", "GiB", "TiB",
@@ -93,14 +105,27 @@ func byteToVerboseString(value float64) string {
 	return result
 }
 
+// GetAllStorageInformation retrieves storage information from multiple sources and logs the results.
+//
+// If no storage is found, logs a message and exits the program.
+// For each storage credential, retrieves the configuration and the corresponding storage service.
+// It launches a goroutine for each service to asynchronously retrieve storage information.
+// The retrieved information is appended to a list.
+// Once all goroutines have completed, it calculates the total storage and usage.
+// It logs the storage information and usage bar for each storage.
+
 func GetAllStorageInformation() {
 	var wg = &sync.WaitGroup{}
 	var mutex = &sync.Mutex{}
-	var lStore = len(R.GoogleDriveCredential.Data)
+	var lStore = len(R.StoreCredential.Data)
+	if lStore == 0 {
+		h.LogAbout.Println("No storage found")
+		os.Exit(0)
+	}
 	wg.Add(lStore)
 	var listResult = make([]resultStorageInformation, 0, lStore)
-	for k := range R.GoogleDriveCredential.Data {
-		var config, err = R.GoogleDriveCredential.GetConfig(k)
+	for k := range R.StoreCredential.Data {
+		var config, err = R.StoreCredential.GetConfig(k)
 		if err != nil {
 			h.LogErr.Println("Error: Can't find config", k)
 			continue
@@ -128,8 +153,8 @@ func GetAllStorageInformation() {
 		}
 		totalStorage += result.data.TotalStorage
 		totalUsage += result.data.UsedStorage
-		h.LogResult.Printf("%s \t\t%s\t(%s/%s)\n",
-			getStorageBar(result.data.UsedStorage, result.data.TotalStorage),
+		h.LogWarning.Print(getStorageBar(result.data.UsedStorage, result.data.TotalStorage))
+		h.LogResult.Printf(" \t\t%s\t(%s/%s)\n",
 			result.data.StoreID,
 			byteToVerboseString(result.data.UsedStorage),
 			byteToVerboseString(result.data.TotalStorage),
